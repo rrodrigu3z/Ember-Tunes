@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Ember Tunes Jasmine Specs Runner</title>
+  <link rel="stylesheet" type="text/css" href="../vendor/jasmine-1.1.0/jasmine.css">
+  <script type="text/javascript" src="../vendor/jasmine-1.1.0/jasmine.js"></script>
+  <script type="text/javascript" src="../vendor/jasmine-1.1.0/jasmine-html.js"></script>
+
+  <!-- include source files here... -->
+  <script src="../vendor/jquery.js"></script>
+  <script src="../vendor/underscore.js"></script>
+  <script src="../vendor/ember.js"></script>
+  <script src="../ember_tunes.js"></script>
+
+  <!-- include spec files here... -->
+  <script type="text/javascript" src="ember_tunes_spec.js"></script>
+
+</head>
+<body>
+
+<script type="text/javascript">
+  jasmine.getEnv().addReporter(new jasmine.TrivialReporter());
+  jasmine.getEnv().execute();
+</script>
+
+</body>
+</html>
