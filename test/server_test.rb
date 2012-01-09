@@ -7,8 +7,26 @@ class EmberTunesTest < Test::Unit::TestCase
     EmberTunes
   end
   
-  def test_hello_world
-    get '/'
-    assert_equal('Hola Mundo!', last_response.body)
+  def test_index_success
+    get "/"
+    assert last_response.ok?
   end
+  
+  def test_index_include_html_headers
+    get "/"
+    assert_equal("text/html;charset=utf-8", last_response.headers["Content-type"])
+  end
+  
+  def test_index_include_container
+    get "/"
+    assert last_response.match(/id=\"container\"/), "#container must exists"
+  end
+  
+  def test_index_include_js_files
+    get "/"
+    assert last_response.match(/jquery\.js/),       "must include jquery.js"
+    assert last_response.match(/ember\.js/),        "must include ember.js"
+    assert last_response.match(/ember_tunes\.js/),  "must include ember_tunes.js"
+  end
+  
 end

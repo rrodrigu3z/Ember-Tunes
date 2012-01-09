@@ -1,0 +1,3 @@
+*.DS_Store
+public/javascripts/*.js
+public/javascripts/spec/*.js
