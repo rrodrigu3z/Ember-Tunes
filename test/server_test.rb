@@ -30,4 +30,14 @@ class EmberTunesTest < Test::Unit::TestCase
     assert last_response.match(/ember_tunes\.js/),  "must include ember_tunes.js"
   end
   
+  def test_albums_success
+    get "/albums"
+    assert last_response.ok?
+  end
+  
+  def test_albums_include_json_headers
+    get "/albums"
+    assert_equal("application/json;charset=utf-8", last_response.headers["Content-type"])
+  end
+  
 end
