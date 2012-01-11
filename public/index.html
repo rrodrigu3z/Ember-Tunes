@@ -25,7 +25,7 @@
     
     <script type="text/x-handlebars" data-template-name="albums">
       {{#each albums}}
-        {{view App.AlbumView titleBinding="title" artistBinding="artist" class="album"}}
+        {{view App.AlbumView titleBinding="title" artistBinding="artist" tracksBinding="tracks" class="album"}}
       {{/each}}
     </script>
     
@@ -35,42 +35,23 @@
   <body>
     <div id="container">
       
-      <!--
-      <div class="playlist">
-        <h1>Playlist</h1>
-        <nav>
-          <button class="control play">Play</button>
-          <button class="control pause">Pause</button>
-          <button class="control prev">Prev</button>
-          <button class="control next">Next</button>
-        </nav>
-        <ul class="albums">
-          <div class="album">
-            <button class="queue remove"><img src="/images/remove.png"></button>
-            <span class="album-title">Bound - Zen Bound Ingame Music</span>
-            <span class="artist-name">Ghost Monkey</span>
-            <ol class="tracks">
-              <li class="current">Care</li>
-              <li>Rope and Wood</li>
-              <li>Problem Solvent</li>
-              <li>Unpaint My Skin</li>
-              <li>Nostalgia</li>
-              <li>Interludum</li>
-              <li>Grind</li>
-              <li>Diagrams</li>
-              <li>Hare</li>
-              <li>Carefree</li>
-              <li>Tunnel At The End Of Light</li>
-            </ol>
-          </div>
-        </ul>
-      </div>
-       -->
+      <script type="text/x-handlebars">
+        {{#view App.PlaylistView class="playlist"}}
+          <h1>Playlist</h1>
+          <nav>
+            <button class="control play">Play</button>
+            <button class="control pause">Pause</button>
+            <button class="control prev">Prev</button>
+            <button class="control next">Next</button>
+          </nav>
+          {{view albumsView class="albums"}}
+        {{/view}}
+      </script>
        
       <script type="text/x-handlebars">
         {{#view App.LibraryView tagName="section" class="library"}}
           <h1>Music Library</h1>
-          {{view App.AlbumsView tagName="ul" class="albums"}}
+          {{view App.AlbumsView class="albums"}}
         {{/view}}
       </script>
       
