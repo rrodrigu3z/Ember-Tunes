@@ -67,14 +67,27 @@ describe "Player", ->
   beforeEach ->
     @player = App.player
   
-  it "is stopped", ->
-    expect(@player.get('state')).toEqual "stop"
+  describe "on init", ->
+    it "is stopped", ->
+      expect(@player.get('state')).toEqual "stop"
   
-  it "sets currentAlbumIndex to 0", ->
-    expect(@player.get('currentAlbumIndex')).toEqual 0
+    it "sets currentAlbumIndex to null", ->
+      expect(@player.get('currentAlbumIndex')).toBe null
   
-  it "sets currentTrackIndex to 0", ->
-    expect(@player.get('currentTrackIndex')).toEqual 0
+    it "sets currentTrackIndex to null", ->
+      expect(@player.get('currentTrackIndex')).toBe null
+    
+  describe "playing", ->
+    beforeEach ->
+      @player.set 'state', 'play'
+      @player.set 'currentAlbumIndex', 0
+      @player.set 'currentTrackIndex', 0
+    
+    it "resets the player on reset", ->
+      @player.reset()
+      expect(@player.get('currentAlbumIndex')).toBe null
+      expect(@player.get('currentTrackIndex')).toBe null
+      expect(@player.get('state')).toEqual "stop"
   
   # play
   # pause

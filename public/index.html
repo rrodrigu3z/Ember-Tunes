@@ -46,8 +46,8 @@
           <nav>
             <button class="control play">Play</button>
             <button class="control pause">Pause</button>
-            <button class="control prev">Prev</button>
-            <button class="control next">Next</button>
+            {{view Em.Button class="control prev" target="App.playlistController" action="prevTrack"}}
+            {{view Em.Button class="control next" target="App.playlistController" action="nextTrack"}}
           </nav>
           {{view albumsView class="albums"}}
         {{/view}}

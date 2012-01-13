@@ -34,20 +34,15 @@ App.albumsController = Em.ArrayController.create
       App.albumsController.addAlbum(albumData) for albumData in data
 
 App.player = Em.Object.create
-  currentAlbumIndex: 0
-  currentTrackIndex: 0
+  currentAlbumIndex: null
+  currentTrackIndex: null
   state: 'stop'
   
-  # TODO: Test
-  currentAlbumIndexChanged: Em.observer ->
-    console.log "Play: #{App.playlistController.get('currentAlbum').title}"
-  , 'currentAlbumIndex'
+  reset: ->
+    @set 'state', 'stop'
+    @set 'currentTrackIndex', null
+    @set 'currentAlbumIndex', null
     
-  # TODO: Test
-  currentTrackIndexChanged: Em.observer ->
-    console.log "Play: #{App.playlistController.get('currentTrack').title}"
-  , 'currentTrackIndex'
-
   play: ->
   pause: ->
   nextTrack: ->
@@ -60,6 +55,19 @@ App.playlistController = Em.ArrayProxy.create
   currentAlbumIndexBinding: 'App.player.currentAlbumIndex'
   currentTrackIndexBinding: 'App.player.currentTrackIndex'
   
+  # TODO: Test
+  currentAlbumIndexChanged: Em.observer ->
+    if @get('currentAlbumIndex') isnt null
+      @get('currentAlbum')?.set('isSelected', yes)
+  ,'currentAlbumIndex'
+    
+  # TODO: Test
+  currentTrackIndexChanged: Em.observer ->
+    if @get('currentTrackIndex') isnt null
+      @get('currentTrack')?.set('isSelected', yes)
+  ,'currentTrackIndex'
+  
+  
   addAlbum: (album) ->
     if @filterProperty('title', album.get('title')).length is 0
       album.get('tracks').setEach 'isSelected', no
@@ -67,19 +75,23 @@ App.playlistController = Em.ArrayProxy.create
       
       # TODO: Test
       # Selects first album and track if this is the first album added
-      if @get('content').length is 1    
-        @get('currentAlbum').set('isSelected', yes)
-        @get('currentTrack').set('isSelected', yes)
+      if @get('content').length is 1
+        @set('currentAlbumIndex', 0)
+        @set('currentTrackIndex', 0)
         
   addToPlaylist: (button) ->
     @addAlbum button.getPath('parentView.album')
+    
   removeFromPlaylist: (button) ->
-    album = button.getPath('parentView.album')
+    album = button.getPath('parentView.album')    
+    # TODO: Test and implement when album is current, etc.
+    if @get('content').length is 1
+      @get('player').reset()
+    else
+      @set('currentAlbumIndex', 0)
+      @set('currentTrackIndex', 0)
+      
     @removeObject album
-    # TODO:
-    # if @indexOf(album) < @get('currentAlbumIndex')  
-    #   @get('currentAlbum').set('isSelected', yes)
-    # Se elimina album que hacer con la selección actual??
     
   currentAlbum: Ember.computed ->
     @get('content')[@get('currentAlbumIndex')]
@@ -87,7 +99,7 @@ App.playlistController = Em.ArrayProxy.create
     
   currentTrack: Ember.computed ->
     trackIndex = @get('currentTrackIndex')
-    @get('currentAlbum').get('tracks')[trackIndex]
+    @get('currentAlbum')?.get('tracks')[trackIndex]
   .property()
   
   isCurrentAlbumFirst: ->
@@ -109,11 +121,11 @@ App.playlistController = Em.ArrayProxy.create
     else 
       newIndex = 0 unless @isCurrentAlbumFirst()
     
-    @get('currentAlbum').set('isSelected', no)
-    @set('currentAlbumIndex', newIndex)
-    @get('currentAlbum').set('isSelected', yes)
-    
-    @set 'currentTrackIndex', 0  # Next Album is Always first track!
+    if currentAlbumIndex isnt newIndex  
+      @get('currentAlbum').set('isSelected', no)
+      @set('currentAlbumIndex', newIndex)
+    # Next Album is Always first track!
+    @set 'currentTrackIndex', 0
   
   # primero  | ultimo | 
   #     1       0       ir al último
@@ -127,12 +139,12 @@ App.playlistController = Em.ArrayProxy.create
       newIndex--  # Prev Album
     else 
       newIndex = @get('content').length - 1 unless @isCurrentAlbumLast()
-      
-    @get('currentAlbum').set('isSelected', no)
-    @set('currentAlbumIndex', newIndex)
-    @get('currentAlbum').set('isSelected', yes)
     
-    @set 'currentTrackIndex', @get('currentAlbum').get('tracks').length - 1  # Prev Album is Always last track!
+    if currentAlbumIndex isnt newIndex
+      @get('currentAlbum').set('isSelected', no)
+      @set('currentAlbumIndex', newIndex)
+    # Prev Album is Always last track!
+    @set 'currentTrackIndex', @get('currentAlbum').get('tracks').length - 1
     
   nextTrack: ->
     currentTrackIndex = @get('currentTrackIndex')
@@ -143,8 +155,6 @@ App.playlistController = Em.ArrayProxy.create
       @nextAlbum() # Next Album and set track to 0! w00t!
     else # Same album
       @set 'currentTrackIndex', currentTrackIndex + 1 # just increment track
-    # select new current Track
-    @get('currentTrack').set('isSelected', yes)
     
   prevTrack: ->
     currentTrackIndex = @get('currentTrackIndex')
@@ -156,8 +166,10 @@ App.playlistController = Em.ArrayProxy.create
     else # Same album
       @set 'currentTrackIndex', currentTrackIndex - 1 # just go to prev track
     # select new current Track
-    @get('currentTrack').set('isSelected', yes)
-    
+
+App.playlistController.addObserver 'content.length', ->
+  @get('currentAlbum')?.set('isSelected', yes)
+  @get('currentTrack')?.set('isSelected', yes)
 
 App.LibraryView = Em.View.extend()
 
