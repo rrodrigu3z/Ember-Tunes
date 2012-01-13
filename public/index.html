@@ -12,20 +12,25 @@
     <script src="/javascripts/ember_tunes.js"></script>
     
     <script type="text/x-handlebars" data-template-name="album">
-      <button class="queue add"><img src="/images/add.png"></button>
-      <button class="queue remove"><img src="/images/remove.png"></button>
-      <span class="album-title">{{title}}</span>
-      <span class="artist-name">{{artist}}</span>
+      {{#view App.QueueAlbumButton class="queue add" action="addToPlaylist"}}
+        <img src="/images/add.png">
+      {{/view}}
+      {{#view App.QueueAlbumButton class="queue remove" action="removeFromPlaylist"}}
+        <img src="/images/remove.png">
+      {{/view}}
+
+      <span class="album-title">{{album.title}}</span>
+      <span class="artist-name">{{album.artist}}</span>
       <ol class="tracks">
-        {{#each tracks}}
-          <li>{{title}}</li>
+        {{#each album.tracks}}
+          <li {{bindAttr class="isSelected:current"}} >{{title}}</li>
         {{/each}}
       </ol>
     </script>
     
     <script type="text/x-handlebars" data-template-name="albums">
       {{#each albums}}
-        {{view App.AlbumView titleBinding="title" artistBinding="artist" tracksBinding="tracks" class="album"}}
+        {{view App.AlbumView isSelectedBinding="isSelected" albumBinding="this"}}
       {{/each}}
     </script>
     
@@ -48,12 +53,14 @@
         {{/view}}
       </script>
        
+
       <script type="text/x-handlebars">
         {{#view App.LibraryView tagName="section" class="library"}}
           <h1>Music Library</h1>
           {{view App.AlbumsView class="albums"}}
         {{/view}}
       </script>
+      
       
     </div>
   </body>

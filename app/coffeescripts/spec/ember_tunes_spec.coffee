@@ -45,10 +45,27 @@ describe "Album", ->
   it "should have 2 tracks", ->
     expect(track.title for track in @album.tracks).toEqual ["Track A", "Track B"]
 
+  describe "isFirstTrack", ->
+    it "returns true for the first track", ->
+      expect(@album.isFirstTrack(0)).toBeTruthy()
+    it "returns false for other track", ->
+      expect(@album.isFirstTrack(2)).toBeFalsy()
+
+  describe "isLastTrack", ->
+    it "returns true for the last track", ->
+      expect(@album.isLastTrack(1)).toBeTruthy()
+    it "returns false for other track", ->
+      expect(@album.isLastTrack(0)).toBeFalsy()
+  
+  describe "trackUrlAtIndex", ->
+    it "returns url for a valid track", ->
+      expect(@album.trackUrlAtIndex(0)).toEqual "/music/Album A Track A.mp3"
+    it "returns undefined for an invalid track", ->
+      expect(@album.trackUrlAtIndex(2)).toBe undefined
 
 describe "Player", ->
   beforeEach ->
-    @player = App.Player.create()
+    @player = App.player
   
   it "is stopped", ->
     expect(@player.get('state')).toEqual "stop"
@@ -58,35 +75,185 @@ describe "Player", ->
   
   it "sets currentTrackIndex to 0", ->
     expect(@player.get('currentTrackIndex')).toEqual 0
-
+  
+  # play
+  # pause
+  # next
+  # prev
+  
 
 describe "albumsController", ->
   it "has no albums", ->
     expect(App.albumsController.content.length).toEqual 0
   
-  it "adds an album", ->
-    App.albumsController.addAlbum fixtures.albumData[0]
-    expect(App.albumsController.content.length).toEqual 1
+  describe "add album", ->
+    beforeEach ->
+      App.albumsController.addAlbum fixtures.albumData[0]
+    it "adds an album", ->
+      expect(App.albumsController.content.length).toEqual 1
+    it "tracks are Emmber Objects", ->
+      track = App.albumsController.get('firstObject').get('tracks').get('firstObject')
+      expect(track.get('url')).toBeDefined()
+    
 
 describe "playlistController", ->
   beforeEach ->
-    for album in fixtures.albumData
-      App.playlistController.addAlbum album
+    @playlist = App.playlistController
+    @playlist.set('currentAlbumIndex', 0)
+    @playlist.set('currentTrackIndex', 0)
+    @playlist.set('content', [])
   
-  it "has Album A as first album", ->
-    expect(App.playlistController.get('firstObject').get('title')).toEqual "Album A"
+  it "adds an album to the playlist", ->
+    spyOn @playlist, 'addAlbum'
+    album = App.Album.create(fixtures.albumData[0])
+    buttonEvent = Em.Object.create {parentView:{album:album}}
+    @playlist.addToPlaylist buttonEvent
+    expect(@playlist.addAlbum).toHaveBeenCalledWith album
   
-  it "has Album B as last album", ->
-    expect(App.playlistController.get('lastObject').get('title')).toEqual "Album B"
+  describe "with albums", ->
+    beforeEach ->
+      for album in fixtures.albumData
+        album.tracks = album.tracks.map (item, index, self) ->
+          Em.Object.create(item)
+        @playlist.addAlbum App.Album.create(album)
   
-  describe "addAlbum", ->
+    it "has 2 albums", ->
+      expect(@playlist.content.length).toEqual 2
+      
+    it "has Album A as first album", ->
+      expect(@playlist.get('firstObject').get('title')).toEqual "Album A"
+  
+    it "has Album B as last album", ->
+      expect(@playlist.get('lastObject').get('title')).toEqual "Album B"
+  
+    it "sets isSelected to false in all tracks", ->
+      for album in @playlist
+        expect(album.get('tracks').getEach('isSelected')).toEqual [no, no]
+    
+    it "removes an album from the playlist", ->
+      album = @playlist.get('firstObject')
+      @playlist.removeFromPlaylist Em.Object.create(parentView:{album:album})
+      expect(@playlist.content.length).toEqual 1
+    
+    describe "current song on initial state", ->
+      it "is Album A", ->
+        currentAlbum = @playlist.get('currentAlbum')
+        expect(currentAlbum.get('title')).toEqual "Album A"
+        
+      it "is Track A", ->
+        currentTrack = @playlist.get('currentTrack')
+        expect(currentTrack.get('title')).toEqual "Track A"
+    
+    describe "current song at no-initial state", ->
+      beforeEach ->
+        @playlist.set('currentAlbumIndex', 1)
+        @playlist.set('currentTrackIndex', 1)
+      
+      it "is Album B", ->
+        currentAlbum = @playlist.get('currentAlbum')
+        expect(currentAlbum.get('title')).toEqual "Album B"
+      
+      it "is Track B", ->
+        currentTrack = @playlist.get('currentTrack')
+        expect(currentTrack.get('title')).toEqual "Track B"
+    
+    describe "isCurrentAlbumFirst", ->
+      it "returns true on first Album", ->
+        @playlist.set('currentAlbumIndex', 0)
+        expect(@playlist.isCurrentAlbumFirst()).toBeTruthy()
+        
+      it "returns false on other Album", ->
+        @playlist.set('currentAlbumIndex', 1)
+        expect(@playlist.isCurrentAlbumFirst()).toBeFalsy()
+        
+    describe "isCurrentAlbumLast", ->
+      it "returns true on last Album", ->
+        @playlist.set('currentAlbumIndex', 1)
+        expect(@playlist.isCurrentAlbumLast()).toBeTruthy()
+        
+      it "returns false on other Album", ->
+        @playlist.set('currentAlbumIndex', 0)
+        expect(@playlist.isCurrentAlbumLast()).toBeFalsy()
+    
+    describe "next track", ->
+      it "increments within an album", ->
+        @playlist.nextTrack()
+        expect(@playlist.get('currentAlbumIndex')).toEqual 0
+        expect(@playlist.get('currentTrackIndex')).toEqual 1
+      
+      it "goes to the next album", ->
+        @playlist.set('currentTrackIndex', 1)
+        @playlist.nextTrack()
+        expect(@playlist.get('currentAlbumIndex')).toEqual 1
+        expect(@playlist.get('currentTrackIndex')).toEqual 0
+    
+      it "wraps around to the first album if at end", ->
+        @playlist.set('currentAlbumIndex', 1) # Last Album
+        @playlist.set('currentTrackIndex', 1) # Last Track
+        @playlist.nextTrack()
+        expect(@playlist.get('currentAlbumIndex')).toEqual 0
+        expect(@playlist.get('currentTrackIndex')).toEqual 0      
+      
+      it "select new current track", ->
+        @playlist.set('currentAlbumIndex', 0)
+        @playlist.set('currentTrackIndex', 0)
+        @playlist.nextTrack()
+        expect(@playlist.get('currentTrack').get('isSelected')).toBeTruthy()
+      
+      it "unselect prev track", ->
+        @playlist.set('currentAlbumIndex', 0)
+        @playlist.set('currentTrackIndex', 0)
+        @playlist.nextTrack()
+        track = @playlist.get('currentAlbum').get('tracks')[0]
+        expect(track.get('isSelected')).toBeFalsy()
+        
+      
+    describe "prev track", ->
+      it "goes to the prev track within same album", ->
+        @playlist.set('currentTrackIndex', 1)
+        @playlist.prevTrack()
+        expect(@playlist.get('currentAlbumIndex')).toEqual 0
+        expect(@playlist.get('currentTrackIndex')).toEqual 0
+      
+      it "goes to the last track of the prev album", ->
+        @playlist.set('currentAlbumIndex', 1)
+        @playlist.set('currentTrackIndex', 0)
+        @playlist.prevTrack()
+        expect(@playlist.get('currentAlbumIndex')).toEqual 0
+        expect(@playlist.get('currentTrackIndex')).toEqual 1
+    
+      it "wraps around to the last track and last album if at end", ->
+        @playlist.set('currentAlbumIndex', 0) # First Album
+        @playlist.set('currentTrackIndex', 0) # First Track
+        @playlist.prevTrack()
+        expect(@playlist.get('currentAlbumIndex')).toEqual 1
+        expect(@playlist.get('currentTrackIndex')).toEqual 1
+      
+  describe "add included Album", ->
+    beforeEach ->
+      @album = App.Album.create(fixtures.albumData[0])
+      @playlist.addAlbum @album
+      
     it "returns undefined on existing album", ->
-      result = App.playlistController.addAlbum fixtures.albumData[0]
+      result = @playlist.addAlbum @album
       expect(result).toBe(undefined)
     
     it "do not add an existing album", ->
-      App.playlistController.addAlbum fixtures.albumData[0]
-      expect(App.playlistController.content.length).toEqual 2
+      @playlist.addAlbum @album
+      expect(@playlist.content.length).toEqual 1
+  
+  describe "player binding", ->
+    it "is binded to App.player", ->
+      expect(@playlist.playerBinding._from).toEqual 'App.player'
+      expect(@playlist.playerBinding._to).toEqual 'player'
+    
+    it "has currentTrackIndex binded to player", ->
+      expect(@playlist.currentTrackIndexBinding._from).toEqual 'App.player.currentTrackIndex'
+      expect(@playlist.currentTrackIndexBinding._to).toEqual 'currentTrackIndex'
+    
+    it "has currentAlbumIndex binded to player", ->
+      expect(@playlist.currentAlbumIndexBinding._from).toEqual 'App.player.currentAlbumIndex'
+      expect(@playlist.currentAlbumIndexBinding._to).toEqual 'currentAlbumIndex'
     
   
 describe "LibraryView", ->
@@ -113,6 +280,15 @@ describe "AlbumView", ->
     @albumView = App.AlbumView.create()
     expect(@albumView.templateName).toEqual "album"
 
+  it "use class name albums", ->
+    @albumView = App.AlbumView.create()
+    expect(@albumView.classNames).toContain 'album'
+  
+  it "binds classname to isSelected property as current", ->
+    @albumView = App.AlbumView.create()
+    expect(@albumView.classNameBindings).toEqual ['isSelected:current']
+  
+  
 describe "PlaylistView", ->
   it "Should be defined", ->
     expect(App.PlaylistView?).toBeTruthy()
@@ -131,3 +307,10 @@ describe "PlaylistView", ->
     it "sets tagName as ul", ->
       expect(@albumsView.tagName).toEqual "ul"
       
+describe "QueueAlbumButton", ->
+  beforeEach ->
+    @button = App.QueueAlbumButton.create()
+  
+  it "sets target", ->
+    expect(@button.get('target')).toEqual "App.playlistController"
+  
