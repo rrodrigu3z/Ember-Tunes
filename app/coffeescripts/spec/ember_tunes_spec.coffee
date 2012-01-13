@@ -112,8 +112,8 @@ describe "albumsController", ->
 describe "playlistController", ->
   beforeEach ->
     @playlist = App.playlistController
-    @playlist.set('currentAlbumIndex', 0)
-    @playlist.set('currentTrackIndex', 0)
+    @playlist.set('currentAlbumIndex', null)
+    @playlist.set('currentTrackIndex', null)
     @playlist.set('content', [])
   
   it "adds an album to the playlist", ->
@@ -123,6 +123,12 @@ describe "playlistController", ->
     @playlist.addToPlaylist buttonEvent
     expect(@playlist.addAlbum).toHaveBeenCalledWith album
   
+  it "sets first album and track when added first album", ->
+    album = App.Album.create(fixtures.albumData[0])
+    @playlist.addAlbum album
+    expect(@playlist.get('currentAlbumIndex')).toEqual 0
+    expect(@playlist.get('currentTrackIndex')).toEqual 0
+    
   describe "with albums", ->
     beforeEach ->
       for album in fixtures.albumData
