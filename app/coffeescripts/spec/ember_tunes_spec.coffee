@@ -77,6 +77,10 @@ describe "Player", ->
     it "sets currentTrackIndex to null", ->
       expect(@player.get('currentTrackIndex')).toBe null
     
+    it "sets audio to an Audio HTML 5 element", ->
+      expect(@player.get('audio').tagName).toEqual "AUDIO"
+    
+    
   describe "playing", ->
     beforeEach ->
       @player.set 'state', 'play'
@@ -89,11 +93,33 @@ describe "Player", ->
       expect(@player.get('currentTrackIndex')).toBe null
       expect(@player.get('state')).toEqual "stop"
   
-  # play
-  # pause
-  # next
-  # prev
+  describe "control", ->
+    it "is not playing on stop", ->
+      expect(@player.isPlaying()).toBeFalsy()
+    
+    it "plays on play", ->
+      @player.play()
+      expect(@player.get('state')).toEqual "play"
+    
+    it "is playing on play", ->
+      @player.play()
+      expect(@player.isPlaying()).toBeTruthy()
+    
+    it "pauses on pause", ->
+      @player.pause()
+      expect(@player.get('state')).toEqual "pause"
   
+    it "is not playing on pause", ->
+      @player.pause()
+      expect(@player.isPlaying()).toBeFalsy()
+  
+    it "toggles play or pause", ->
+      @player.togglePlayPause()
+      expect(@player.get('state')).toEqual "play"
+      @player.togglePlayPause()
+      expect(@player.get('state')).toEqual "pause"
+    
+    
 
 describe "albumsController", ->
   it "has no albums", ->
@@ -225,7 +251,6 @@ describe "playlistController", ->
         @playlist.nextTrack()
         track = @playlist.get('currentAlbum').get('tracks')[0]
         expect(track.get('isSelected')).toBeFalsy()
-        
       
     describe "prev track", ->
       it "goes to the prev track within same album", ->
@@ -247,6 +272,15 @@ describe "playlistController", ->
         @playlist.prevTrack()
         expect(@playlist.get('currentAlbumIndex')).toEqual 1
         expect(@playlist.get('currentTrackIndex')).toEqual 1
+    
+    describe "change track", ->
+      it "sets audio src en player", ->
+        @playlist.set('currentAlbumIndex', 0)
+        @playlist.set('currentTrackIndex', 0)
+        @playlist.nextTrack()
+        player = @playlist.get('player')
+        expect(player.get('audio').src).toMatch /Album%20A%20Track%20B.mp3/
+    
       
   describe "add included Album", ->
     beforeEach ->
@@ -332,4 +366,30 @@ describe "QueueAlbumButton", ->
   
   it "sets target", ->
     expect(@button.get('target')).toEqual "App.playlistController"
+
+describe "PlayPauseButton", ->
+  beforeEach ->
+    @button = App.PlayPauseButton.create()
+  
+  it "sets target", ->
+    expect(@button.get('target')).toEqual "App.player"
+  
+  it "sets action", ->
+    expect(@button.get('action')).toEqual "togglePlayPause"
+  
+  it "adds class control", ->
+    expect(@button.get('classNames')).toContain "control"
+  
+  it "binds class to a button property", ->
+    expect(@button.get('classNameBindings')).toContain 'button'
+  
+  describe "play pause buton binding", ->
+    it "is play if player is not playing", ->
+      App.player.pause()
+      expect(@button.get('button')).toEqual "play"
+    
+    it "is pause if player is playing", ->
+      App.player.play()
+      expect(@button.get('button')).toEqual "pause"
+    
   

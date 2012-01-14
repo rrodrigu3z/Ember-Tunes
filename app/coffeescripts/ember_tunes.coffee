@@ -34,18 +34,21 @@ App.player = Em.Object.create
   currentAlbumIndex: null
   currentTrackIndex: null
   state: 'stop'
+  audio: new Audio
+  
+  stateChanged: Em.observer ->
+    if @get('state') in ['stop', 'pause'] then @get('audio').pause() else @get('audio').play()
+  ,'state'
   
   reset: ->
     @set 'state', 'stop'
     @set 'currentTrackIndex', null
     @set 'currentAlbumIndex', null
-    
-  play: ->
-  pause: ->
-  nextTrack: ->
-  prevTrack: ->
-
-
+  play:   -> @set 'state', 'play'
+  pause:  -> @set 'state', 'pause'
+  togglePlayPause: -> if @isPlaying() then @pause() else @play()
+  isPlaying: -> @get('state') is 'play'
+  
 App.playlistController = Em.ArrayProxy.create
   content: []
   playerBinding: 'App.player'
@@ -62,6 +65,8 @@ App.playlistController = Em.ArrayProxy.create
   currentTrackIndexChanged: Em.observer ->
     if @get('currentTrackIndex') isnt null
       @get('currentTrack')?.set('isSelected', yes)
+      @get('player').get('audio').src = @get('currentTrack')?.url
+      @get('player').get('audio').play() if @get('player').get('state') is 'play' # Hack, change track pauses the player?
   ,'currentTrackIndex'
   
   addAlbum: (album) ->
@@ -170,3 +175,13 @@ App.PlaylistView = Em.View.extend
     
 App.QueueAlbumButton = Em.Button.extend
   target: 'App.playlistController'
+
+App.PlayPauseButton = Em.Button.extend
+  classNames: ['control']
+  classNameBindings: ['button']
+  target: 'App.player'
+  action: 'togglePlayPause'
+  button: Em.computed ->
+    if App.player.isPlaying() then 'pause' else 'play'
+  .property('App.player.state')
+  

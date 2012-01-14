@@ -25,7 +25,6 @@ class EmberTunesTest < Test::Unit::TestCase
   def test_index_include_js_files
     get "/"
     assert last_response.match(/jquery\.js/),       "must include jquery.js"
-    assert last_response.match(/underscore\.js/),   "must include underscore.js"
     assert last_response.match(/ember\.js/),        "must include ember.js"
     assert last_response.match(/ember_tunes\.js/),  "must include ember_tunes.js"
   end
