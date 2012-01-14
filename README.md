@@ -27,16 +27,17 @@ Backbone.js go to http://peepcode.com/products/backbone-js and
 https://peepcode.com/products/backbone-ii and take a look!
   
 Install
-=======
+-------
 
 Get the code:
+    git clone git://github.com/rrodrigu3z/Ember-Tunes.git
 
 Install dependencies:
-  
+    cd Ember-Tunes
     bundle install
 
 USAGE
-=====
+-----
 
 Run:
 
