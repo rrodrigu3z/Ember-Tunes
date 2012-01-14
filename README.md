@@ -30,10 +30,12 @@ Install
 -------
 
 Get the code:
+   
     git clone git://github.com/rrodrigu3z/Ember-Tunes.git
 
 Install dependencies:
-    cd Ember-Tunes
+    
+	cd Ember-Tunes
     bundle install
 
 USAGE
